@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>算数ノート</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Shippori+Mincho+B1:wght@400;700;800&display=swap');
+
+:root {
+  --ink: #1c1c2e;
+  --paper: #f7f4ef;
+  --paper2: #edeae2;
+  --red: #d63031;
+  --orange: #e17055;
+  --green: #00b894;
+  --blue: #0984e3;
+  --yellow: #fdcb6e;
+  --gray: #636e72;
+  --lgray: #dfe6e9;
+  --radius: 18px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-deep: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow-x: hidden; }
+body { font-family: 'Noto Sans JP', sans-serif; background: var(--paper); color: var(--ink); }
+
+#app { display: flex; flex-direction: column; height: 100dvh; max-width: 520px; margin: 0 auto; }
+
+/* HEADER */
+.hdr {
+  background: var(--ink);
+  padding: 16px 20px 12px;
+  flex-shrink: 0;
+}
+.hdr-top { display: flex; align-items: center; justify-content: space-between; }
+.hdr-title { font-family: 'Shippori Mincho B1', serif; font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 0.04em; }
+.hdr-date { font-size: 11px; color: #888; }
+.hdr-sub { font-size: 10px; color: #666; margin-top: 2px; }
+
+/* NAV */
+.nav {
+  display: flex;
+  background: var(--ink);
+  border-top: 1px solid #2a2a3e;
+  flex-shrink: 0;
+}
+.nav-btn {
+  flex: 1; padding: 9px 4px 11px;
+  background: none; border: none; color: #666;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 10px;
+  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  transition: color 0.2s;
+}
+.nav-btn .ni { font-size: 19px; }
+.nav-btn.on { color: var(--yellow); }
+
+/* SCREENS */
+.screen { display: none; flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+.screen.on { display: block; }
+
+/* CARDS */
+.card { background: #fff; border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
+.card-ttl { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; }
+
+/* STATS */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.stat { background: #fff; border-radius: 14px; padding: 12px 6px; text-align: center; box-shadow: var(--shadow); }
+.stat-n { font-size: 30px; font-weight: 900; line-height: 1; }
+.stat-l { font-size: 10px; color: var(--gray); margin-top: 3px; }
+.s-red .stat-n { color: var(--red); }
+.s-or .stat-n { color: var(--orange); }
+.s-gr .stat-n { color: var(--green); }
+
+/* BUTTONS */
+.btn {
+  width: 100%; padding: 16px; border: none; border-radius: var(--radius);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; letter-spacing: 0.04em;
+}
+.btn:active { transform: scale(0.97); }
+.btn-start { background: linear-gradient(135deg, var(--red), var(--orange)); color: #fff; box-shadow: 0 4px 16px rgba(214,48,49,0.35); }
+.btn-start:disabled { background: var(--lgray); color: var(--gray); box-shadow: none; }
+.btn-blue { background: linear-gradient(135deg, #0984e3, #74b9ff); color: #fff; box-shadow: 0 4px 14px rgba(9,132,227,0.35); }
+.btn-blue:disabled { background: var(--lgray); color: var(--gray); box-shadow: none; }
+.btn-green { background: linear-gradient(135deg, var(--green), #55efc4); color: #fff; box-shadow: 0 4px 14px rgba(0,184,148,0.35); }
+.btn-green:disabled { background: var(--lgray); color: var(--gray); box-shadow: none; }
+.btn-dark { background: var(--ink); color: #fff; }
+
+/* API KEY BANNER */
+.api-banner {
+  background: #fff8e1; border: 2px solid var(--yellow); border-radius: var(--radius);
+  padding: 14px; margin-bottom: 14px; font-size: 13px; line-height: 1.6;
+}
+.api-banner a { color: var(--blue); }
+.api-inp {
+  width: 100%; margin-top: 8px; padding: 10px 12px;
+  border: 2px solid var(--lgray); border-radius: 10px;
+  font-size: 13px; font-family: monospace; outline: none;
+}
+.api-inp:focus { border-color: var(--blue); }
+.api-save {
+  margin-top: 8px; padding: 8px 16px;
+  background: var(--blue); color: #fff; border: none;
+  border-radius: 8px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px; cursor: pointer;
+}
+
+/* TODAY SCHEDULE */
+.sched-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--paper2); font-size: 13px;
+}
+.sched-item:last-child { border-bottom: none; }
+.sched-tag {
+  background: var(--ink); color: #fff;
+  font-size: 10px; padding: 2px 8px; border-radius: 10px; white-space: nowrap; flex-shrink: 0;
+}
+.sched-q { flex: 1; color: var(--gray); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ===== QUIZ ===== */
+.qz-prog { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.qz-bar { flex: 1; height: 6px; background: var(--lgray); border-radius: 3px; overflow: hidden; }
+.qz-fill { height: 100%; background: linear-gradient(90deg, var(--red), var(--orange)); border-radius: 3px; transition: width 0.4s ease; }
+.qz-txt { font-size: 12px; color: var(--gray); white-space: nowrap; }
+
+.q-card {
+  background: #fff; border-radius: 20px; padding: 20px;
+  box-shadow: var(--shadow-deep); margin-bottom: 14px; min-height: 180px;
+}
+.q-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--ink); color: #fff;
+  font-size: 11px; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px;
+}
+.q-badge .q-type-icon { font-size: 13px; }
+.q-text { font-size: 16px; line-height: 1.9; white-space: pre-wrap; }
+.q-img { width: 100%; border-radius: 10px; margin-top: 12px; max-height: 260px; object-fit: contain; }
+
+/* VARIATION BADGE */
+.var-badge {
+  display: inline-block; background: #e3f2fd; color: var(--blue);
+  font-size: 10px; padding: 2px 8px; border-radius: 8px; margin-left: 6px;
+  font-weight: 700;
+}
+
+/* ANSWER INPUT */
+.ans-area { margin-bottom: 14px; }
+.ans-label { font-size: 12px; color: var(--gray); margin-bottom: 6px; font-weight: 700; }
+.ans-row { display: flex; gap: 8px; }
+.ans-inp {
+  flex: 1; padding: 14px 16px;
+  border: 2px solid var(--lgray); border-radius: 14px;
+  font-size: 18px; font-family: 'Noto Sans JP', sans-serif;
+  outline: none; text-align: center; font-weight: 700;
+  -webkit-appearance: none; appearance: none;
+}
+.ans-inp:focus { border-color: var(--blue); }
+.ans-inp.correct { border-color: var(--green); background: #e8faf4; }
+.ans-inp.wrong { border-color: var(--red); background: #ffeaea; }
+.ans-unit {
+  padding: 14px 10px; font-size: 15px; font-weight: 700;
+  color: var(--gray); white-space: nowrap; align-self: center;
+}
+.check-btn {
+  padding: 14px 20px; background: var(--blue); color: #fff;
+  border: none; border-radius: 14px; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 15px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+  transition: transform 0.12s;
+}
+.check-btn:active { transform: scale(0.95); }
+
+/* RESULT FEEDBACK */
+.feedback {
+  border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
+  animation: popIn 0.3s ease;
+}
+.feedback.ok { background: #e8faf4; border-left: 4px solid var(--green); }
+.feedback.ng { background: #fff0f0; border-left: 4px solid var(--red); }
+.fb-icon { font-size: 28px; margin-bottom: 6px; }
+.fb-ttl { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.fb-msg { font-size: 13px; color: var(--gray); line-height: 1.6; }
+
+/* SOLUTION */
+.sol-card {
+  background: #f0f9f6; border-radius: var(--radius); padding: 16px;
+  margin-bottom: 14px; border-left: 4px solid var(--green);
+}
+.sol-ttl { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+.sol-txt { font-size: 14px; line-height: 1.85; white-space: pre-wrap; }
+
+/* RESULT SCREEN */
+.result-wrap { text-align: center; padding: 20px 0; }
+.result-ring {
+  width: 150px; height: 150px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--ink), #2d3561);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin: 0 auto 20px; box-shadow: var(--shadow-deep);
+  animation: popIn 0.4s ease;
+}
+.result-pct { font-size: 40px; font-weight: 900; color: #fff; line-height: 1; }
+.result-sub { font-size: 11px; color: #aaa; margin-top: 2px; }
+.result-msg { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.result-detail { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+.result-cell { background: #fff; border-radius: 12px; padding: 12px; text-align: center; box-shadow: var(--shadow); }
+.rc-n { font-size: 24px; font-weight: 900; }
+.rc-l { font-size: 11px; color: var(--gray); }
+
+/* ADD SCREEN */
+.upload-zone {
+  border: 2px dashed #ccc; border-radius: var(--radius);
+  padding: 36px 16px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s; margin-bottom: 14px;
+  background: #fff;
+}
+.upload-zone:active, .upload-zone.drag { border-color: var(--orange); background: #fff8f0; }
+.upload-icon { font-size: 52px; margin-bottom: 10px; }
+.upload-txt { color: var(--gray); font-size: 14px; line-height: 1.6; }
+#photo-input { display: none; }
+
+.preview-img { width: 100%; border-radius: var(--radius); margin-bottom: 12px; max-height: 280px; object-fit: contain; display: none; box-shadow: var(--shadow); }
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.tag-btn {
+  padding: 6px 14px; border: 2px solid var(--lgray);
+  border-radius: 20px; font-size: 12px; cursor: pointer;
+  background: #fff; transition: all 0.18s; font-family: 'Noto Sans JP', sans-serif;
+}
+.tag-btn.on { border-color: var(--ink); background: var(--ink); color: #fff; }
+
+.extracted { background: #fff; border-radius: var(--radius); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow); display: none; }
+.ext-label { font-size: 11px; font-weight: 700; color: var(--gray); letter-spacing: 0.1em; margin-bottom: 6px; }
+.ext-ta {
+  width: 100%; border: none; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px; line-height: 1.7; resize: vertical; min-height: 70px;
+  outline: none; color: var(--ink); background: transparent;
+}
+
+/* LIST SCREEN */
+.q-item {
+  background: #fff; border-radius: 14px; padding: 12px 14px;
+  margin-bottom: 8px; display: flex; align-items: flex-start;
+  gap: 10px; box-shadow: var(--shadow);
+}
+.qi-tag { background: var(--ink); color: #fff; font-size: 10px; padding: 3px 8px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; }
+.qi-body { flex: 1; min-width: 0; }
+.qi-text { font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.qi-meta { font-size: 11px; color: var(--gray); margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+.qi-del { background: none; border: none; color: #ccc; font-size: 18px; cursor: pointer; padding: 4px; flex-shrink: 0; }
+.stage-pill {
+  display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 8px; font-weight: 700;
+}
+.sp-0 { background: #ffeaea; color: var(--red); }
+.sp-1 { background: #fff3e0; color: var(--orange); }
+.sp-2 { background: #e3f2fd; color: var(--blue); }
+.sp-3 { background: #e8f5e9; color: var(--green); }
+.sp-4 { background: #f3e5f5; color: #8e24aa; }
+
+/* LOADING */
+.loading {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65); z-index: 9999;
+  align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+}
+.loading.on { display: flex; }
+.spin {
+  width: 48px; height: 48px;
+  border: 4px solid rgba(255,255,255,0.25);
+  border-top-color: #fff;
+  border-radius: 50%; animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.load-txt { color: #fff; font-size: 14px; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 72px; left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: var(--ink); color: #fff;
+  padding: 10px 22px; border-radius: 22px;
+  font-size: 13px; white-space: nowrap;
+  opacity: 0; transition: all 0.25s; z-index: 8888; pointer-events: none;
+}
+.toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* EMPTY */
+.empty { text-align: center; padding: 48px 20px; color: var(--gray); }
+.empty-icon { font-size: 52px; margin-bottom: 12px; }
+.empty-txt { font-size: 15px; line-height: 1.7; }
+
+/* SECTION DIVIDER */
+.sec-div { font-size: 11px; font-weight: 700; color: var(--gray); letter-spacing: 0.12em; text-transform: uppercase; margin: 16px 0 8px; }
+
+/* ANIMATIONS */
+@keyframes popIn {
+  0% { transform: scale(0.7); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.3s ease; }
+
+/* SETTINGS */
+.set-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--paper2); }
+.set-row:last-child { border-bottom: none; }
+.set-label { font-size: 14px; }
+.set-sub { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+/* NUMPAD hint */
+.numpad-hint { font-size: 11px; color: var(--gray); margin-top: 6px; text-align: center; }
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-top">
+      <div>
+        <div class="hdr-title">算数ノート 📒</div>
+        <div class="hdr-sub">中学受験 問題ストック＆復習</div>
+      </div>
+      <div class="hdr-date" id="hdr-date"></div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <button class="nav-btn on" id="nav-today" onclick="goto('today')"><span class="ni">📅</span>今日</button>
+    <button class="nav-btn"   id="nav-quiz"  onclick="goto('quiz-init')"><span class="ni">✏️</span>練習</button>
+    <button class="nav-btn"   id="nav-add"   onclick="goto('add')"><span class="ni">📷</span>追加</button>
+    <button class="nav-btn"   id="nav-list"  onclick="goto('list')"><span class="ni">📚</span>問題集</button>
+  </nav>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading"><div class="spin"></div><div class="load-txt" id="load-txt">読み込み中…</div></div>
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ===== TODAY ===== -->
+  <div class="screen on" id="scr-today">
+    <div id="api-banner" class="api-banner" style="display:none;">
+      ⚠️ <strong>Claude APIキーが必要です</strong><br>
+      写真から問題を読み取り、数字バリエーション問題を生成するために使います。<br>
+      <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> で取得後、以下に入力してください：
+      <input type="text" class="api-inp" id="api-key-inp" placeholder="sk-ant-api03-..." autocomplete="off">
+      <button class="api-save" onclick="saveKey()">保存する</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat s-red"><div class="stat-n" id="s-today">0</div><div class="stat-l">今日の問題</div></div>
+      <div class="stat s-or"><div class="stat-n" id="s-total">0</div><div class="stat-l">ストック数</div></div>
+      <div class="stat s-gr"><div class="stat-n" id="s-streak">0</div><div class="stat-l">連続日数</div></div>
+    </div>
+
+    <button class="btn btn-start" id="start-btn" onclick="goto('quiz-init')">今日の問題をやる 🚀</button>
+
+    <div style="margin-top:16px;" class="card">
+      <div class="card-ttl">本日のスケジュール</div>
+      <div id="today-list"><div style="color:var(--gray);font-size:13px;">問題がありません</div></div>
+    </div>
+
+    <div class="card" style="margin-top:0;">
+      <div class="card-ttl">復習ステージの説明</div>
+      <div style="font-size:12px;line-height:1.9;color:var(--gray);">
+        <span class="stage-pill sp-0">新規</span> 間違えた問題（翌日）<br>
+        <span class="stage-pill sp-1">1週</span> 1週間後<br>
+        <span class="stage-pill sp-2">2週</span> 2週間後<br>
+        <span class="stage-pill sp-3">1月</span> 1ヶ月後<br>
+        <span class="stage-pill sp-4">完了</span> 習得済み<br>
+        <br>
+        <strong>毎回数字を変えて出題</strong>し、答えを入力して自動判定します。
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== QUIZ INIT (= start quiz flow) ===== -->
+  <!-- handled dynamically -->
+
+  <!-- ===== QUIZ ===== -->
+  <div class="screen" id="scr-quiz">
+    <div class="qz-prog">
+      <div class="qz-bar"><div class="qz-fill" id="qz-fill" style="width:0%"></div></div>
+      <div class="qz-txt" id="qz-txt">0 / 0</div>
+    </div>
+
+    <!-- Question phase -->
+    <div id="qz-q-phase">
+      <div class="q-card">
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+          <div class="q-badge">
+            <span class="q-type-icon" id="qz-icon">📐</span>
+            <span id="qz-tag">算数</span>
+          </div>
+          <span class="var-badge" id="qz-var-badge">🔀 数字バリエーション</span>
+        </div>
+        <div class="q-text" id="qz-text"></div>
+        <img class="q-img" id="qz-img" style="display:none;" />
+      </div>
+
+      <div class="ans-area">
+        <div class="ans-label">📝 答えを入力してください</div>
+        <div class="ans-row">
+          <input type="text" inputmode="decimal" class="ans-inp" id="ans-inp"
+            placeholder="例: 120" autocomplete="off"
+            onkeydown="if(event.key==='Enter')checkAns()">
+          <div class="ans-unit" id="ans-unit"></div>
+          <button class="check-btn" onclick="checkAns()">確認</button>
+        </div>
+        <div class="numpad-hint">数字キーパッドが開きます</div>
+      </div>
+    </div>
+
+    <!-- Feedback + solution phase -->
+    <div id="qz-sol-phase" style="display:none;" class="fade-up">
+      <div class="feedback" id="qz-feedback">
+        <div class="fb-icon" id="fb-icon"></div>
+        <div class="fb-ttl" id="fb-ttl"></div>
+        <div class="fb-msg" id="fb-msg"></div>
+      </div>
+      <div class="sol-card">
+        <div class="sol-ttl">📖 解き方・解説</div>
+        <div class="sol-txt" id="qz-sol"></div>
+      </div>
+      <button class="btn btn-dark" onclick="nextQ()">次の問題へ →</button>
+    </div>
+  </div>
+
+  <!-- ===== QUIZ RESULT ===== -->
+  <div class="screen" id="scr-result">
+    <div class="result-wrap">
+      <div class="result-ring">
+        <div class="result-pct" id="res-pct">0%</div>
+        <div class="result-sub">正解率</div>
+      </div>
+      <div class="result-msg" id="res-msg">お疲れ様！</div>
+      <div class="result-detail" id="res-detail"></div>
+      <div class="result-grid">
+        <div class="result-cell"><div class="rc-n" id="rc-ok" style="color:var(--green)">0</div><div class="rc-l">正解</div></div>
+        <div class="result-cell"><div class="rc-n" id="rc-ng" style="color:var(--red)">0</div><div class="rc-l">不正解</div></div>
+      </div>
+      <button class="btn btn-start" style="margin-bottom:10px;" onclick="goto('today')">ホームに戻る</button>
+      <button class="btn btn-dark" onclick="goto('add')">問題を追加する 📷</button>
+    </div>
+  </div>
+
+  <!-- ===== ADD ===== -->
+  <div class="screen" id="scr-add">
+    <div id="api-banner2" class="api-banner" style="display:none;">
+      ⚠️ APIキーを設定してください（ホーム画面から設定できます）
+    </div>
+
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('photo-input').click()">
+      <div class="upload-icon">📸</div>
+      <div class="upload-txt">問題の写真をタップして選択<br><span style="font-size:12px;color:#aaa;">または撮影して追加</span></div>
+    </div>
+    <input type="file" id="photo-input" accept="image/*" capture="environment" onchange="onPhotoSelected(this)">
+
+    <img id="preview-img" class="preview-img" />
+
+    <div class="sec-div">ジャンルを選択</div>
+    <div class="tags" id="genre-tags"></div>
+
+    <button class="btn btn-blue" id="analyze-btn" onclick="analyzePhoto()" disabled>📖 AIで問題を読み取る</button>
+
+    <div class="extracted" id="ext-q">
+      <div class="ext-label">問題文（編集可）</div>
+      <textarea class="ext-ta" id="ext-q-ta" rows="4" placeholder="AIが読み取った問題文が入ります"></textarea>
+    </div>
+    <div class="extracted" id="ext-s">
+      <div class="ext-label">解法・解説（編集可）</div>
+      <textarea class="ext-ta" id="ext-s-ta" rows="5" placeholder="AIが生成した解法が入ります"></textarea>
+    </div>
+    <div class="extracted" id="ext-a">
+      <div class="ext-label">答え（編集可）</div>
+      <textarea class="ext-ta" id="ext-a-ta" rows="2" placeholder="例: 120円、3.5時間"></textarea>
+    </div>
+
+    <button class="btn btn-green" id="save-btn" onclick="saveQuestion()" style="display:none;margin-bottom:20px;">✅ ストックに保存する</button>
+  </div>
+
+  <!-- ===== LIST ===== -->
+  <div class="screen" id="scr-list">
+    <div id="list-content"></div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ==========================================
+// DATA LAYER
+// ==========================================
+const DB_KEY = 'sansuu_v3';
+const KEY_KEY = 'sansuu_apikey';
+
+function loadDB() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY)) || { questions:[], stats:{streak:0,lastDate:null,totalDone:0} }; }
+  catch(e) { return { questions:[], stats:{streak:0,lastDate:null,totalDone:0} }; }
+}
+function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function getKey() { return localStorage.getItem(KEY_KEY) || ''; }
+function saveKey() {
+  const v = document.getElementById('api-key-inp').value.trim();
+  if (!v.startsWith('sk-')) { showToast('APIキーは sk- で始まります'); return; }
+  localStorage.setItem(KEY_KEY, v);
+  document.getElementById('api-banner').style.display = 'none';
+  document.getElementById('api-banner2').style.display = 'none';
+  showToast('✅ APIキーを保存しました');
+}
+
+// ==========================================
+// STAGE / SCHEDULE
+// ==========================================
+// Stages: 0=new(next day), 1=1week, 2=2weeks, 3=1month, 4=done
+const STAGE_DAYS = [1, 7, 14, 30, null];
+const STAGE_NAMES = ['翌日', '1週間後', '2週間後', '1ヶ月後', '習得'];
+const STAGE_LABELS = ['新規', '1週', '2週', '1月', '完了'];
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function addDays(dateStr, n) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + n);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function isDue(q) {
+  if (q.stage >= 4) return false;
+  return q.nextDate <= todayStr();
+}
+function getDueQuestions() {
+  const db = loadDB();
+  return db.questions.filter(isDue);
+}
+
+// ==========================================
+// NAVIGATION
+// ==========================================
+const SCREENS = { today:'scr-today', quiz:'scr-quiz', result:'scr-result', add:'scr-add', list:'scr-list' };
+const NAVBTNS = { today:'nav-today', quiz:'nav-quiz', add:'nav-add', list:'nav-list' };
+
+let quizQueue = [];
+let quizIdx = 0;
+let quizCorrect = 0;
+let quizWrong = 0;
+let currentVariation = null; // { text, answer, solution, unit }
+
+function goto(dest) {
+  // hide all
+  Object.values(SCREENS).forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('on'); });
+  Object.values(NAVBTNS).forEach(id => { const el=document.getElementById(id); if(el) el.classList.remove('on'); });
+
+  if (dest === 'quiz-init') {
+    const due = getDueQuestions();
+    if (due.length === 0) { showToast('今日の問題はありません 🎉'); return; }
+    quizQueue = [...due];
+    quizIdx = 0; quizCorrect = 0; quizWrong = 0;
+    document.getElementById('scr-quiz').classList.add('on');
+    document.getElementById('nav-quiz').classList.add('on');
+    showQuizQuestion();
+    return;
+  }
+
+  const scr = SCREENS[dest];
+  if (scr) {
+    document.getElementById(scr).classList.add('on');
+    const nb = NAVBTNS[dest];
+    if (nb) document.getElementById(nb).classList.add('on');
+  }
+
+  if (dest === 'today') refreshToday();
+  if (dest === 'list') refreshList();
+  if (dest === 'add') resetAdd();
+}
+
+// ==========================================
+// TODAY
+// ==========================================
+function refreshToday() {
+  const db = loadDB();
+  const due = getDueQuestions();
+  document.getElementById('s-today').textContent = due.length;
+  document.getElementById('s-total').textContent = db.questions.filter(q=>q.stage<4).length;
+  document.getElementById('s-streak').textContent = db.stats.streak || 0;
+
+  const btn = document.getElementById('start-btn');
+  btn.disabled = due.length === 0;
+  btn.textContent = due.length > 0 ? `今日の問題をやる（${due.length}問）🚀` : '今日の問題はありません 🎉';
+
+  // schedule list
+  const el = document.getElementById('today-list');
+  if (due.length === 0) { el.innerHTML='<div style="color:var(--gray);font-size:13px;">今日の問題はありません！すばらしい 🎉</div>'; return; }
+  el.innerHTML = due.map(q => `
+    <div class="sched-item">
+      <span class="sched-tag">${q.genre||'算数'}</span>
+      <span class="sched-q">${q.originalText.replace(/\n/g,' ')}</span>
+      <span class="stage-pill sp-${q.stage}">${STAGE_LABELS[q.stage]}</span>
+    </div>
+  `).join('');
+
+  // api key check
+  document.getElementById('api-banner').style.display = getKey() ? 'none' : 'block';
+
+  // date
+  const now = new Date();
+  document.getElementById('hdr-date').textContent =
+    `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+}
+
+// ==========================================
+// QUIZ
+// ==========================================
+async function showQuizQuestion() {
+  if (quizIdx >= quizQueue.length) { showResult(); return; }
+
+  const q = quizQueue[quizIdx];
+  const total = quizQueue.length;
+
+  // progress
+  const pct = Math.round((quizIdx / total) * 100);
+  document.getElementById('qz-fill').style.width = pct + '%';
+  document.getElementById('qz-txt').textContent = `${quizIdx + 1} / ${total}`;
+
+  // show question phase
+  document.getElementById('qz-q-phase').style.display = 'block';
+  document.getElementById('qz-sol-phase').style.display = 'none';
+  document.getElementById('ans-inp').value = '';
+  document.getElementById('ans-inp').className = 'ans-inp';
+
+  // genre / tag
+  document.getElementById('qz-tag').textContent = q.genre || '算数';
+  document.getElementById('qz-icon').textContent = genreIcon(q.genre);
+
+  // Generate variation
+  showLoading('AIが数字を変えた問題を生成中…');
+  try {
+    const variation = await generateVariation(q);
+    currentVariation = variation;
+    document.getElementById('qz-text').textContent = variation.text;
+    document.getElementById('ans-unit').textContent = variation.unit || '';
+    document.getElementById('qz-var-badge').style.display = 'inline-block';
+    if (q.imageData) {
+      document.getElementById('qz-img').src = q.imageData;
+      document.getElementById('qz-img').style.display = 'block';
+    } else {
+      document.getElementById('qz-img').style.display = 'none';
+    }
+  } catch(e) {
+    // fallback: show original
+    currentVariation = { text: q.originalText, answer: q.answer, solution: q.solution, unit: q.unit || '' };
+    document.getElementById('qz-text').textContent = q.originalText;
+    document.getElementById('ans-unit').textContent = q.unit || '';
+    document.getElementById('qz-var-badge').style.display = 'none';
+  }
+  hideLoading();
+
+  // focus answer input
+  setTimeout(() => { try { document.getElementById('ans-inp').focus(); } catch(e){} }, 300);
+}
+
+async function generateVariation(q) {
+  const key = getKey();
+  if (!key) throw new Error('no key');
+
+  const prompt = `あなたは小学生向けの中学受験算数の先生です。
+以下の算数の問題の数字だけを変えた、同じ解き方で解ける別の問題を作ってください。
+
+元の問題:
+${q.originalText}
+
+元の答え: ${q.answer}
+
+以下のJSON形式のみで返してください（他のテキストは一切不要）:
+{
+  "text": "数字を変えた新しい問題文",
+  "answer": "正確な答え（数値のみ、単位なし）",
+  "unit": "単位（円、個、km など。なければ空文字）",
+  "solution": "この問題の解き方の説明（3〜6ステップ程度）"
+}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({
+      model: 'claude-opus-4-5',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  const raw = data.content[0].text.trim().replace(/```json|```/g,'').trim();
+  return JSON.parse(raw);
+}
+
+function normalizeAnswer(s) {
+  return String(s).trim()
+    .replace(/[，,、。\s]/g, '')
+    .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .replace(/[^0-9.\-\/]/g, '');
+}
+
+function checkAns() {
+  const inp = document.getElementById('ans-inp').value.trim();
+  if (!inp) { showToast('答えを入力してください'); return; }
+  if (!currentVariation) return;
+
+  const userAns = normalizeAnswer(inp);
+  const correctAns = normalizeAnswer(currentVariation.answer);
+
+  const isCorrect = userAns === correctAns || isNumericallyClose(userAns, correctAns);
+  showSolution(isCorrect);
+}
+
+function isNumericallyClose(a, b) {
+  const na = parseFloat(a), nb = parseFloat(b);
+  if (isNaN(na) || isNaN(nb)) return false;
+  return Math.abs(na - nb) < 0.01;
+}
+
+function showSolution(isCorrect) {
+  const q = quizQueue[quizIdx];
+
+  document.getElementById('qz-q-phase').style.display = 'none';
+  document.getElementById('qz-sol-phase').style.display = 'block';
+
+  const fb = document.getElementById('qz-feedback');
+  fb.className = 'feedback ' + (isCorrect ? 'ok' : 'ng');
+  document.getElementById('fb-icon').textContent = isCorrect ? '🎉' : '😢';
+  document.getElementById('fb-ttl').textContent = isCorrect ? '正解！' : `不正解… 答えは ${currentVariation.answer}${currentVariation.unit||''}`;
+
+  const unit = currentVariation.unit || q.unit || '';
+  document.getElementById('fb-msg').textContent = isCorrect
+    ? `正解は ${currentVariation.answer}${unit} です！`
+    : `もう一度解き方を確認しましょう。`;
+
+  document.getElementById('qz-sol').textContent = currentVariation.solution || q.solution || '解説なし';
+
+  // update DB
+  const db = loadDB();
+  const qi = db.questions.findIndex(x => x.id === q.id);
+  if (qi >= 0) {
+    const today = todayStr();
+    if (isCorrect) {
+      const newStage = Math.min((db.questions[qi].stage || 0) + 1, 4);
+      db.questions[qi].stage = newStage;
+      db.questions[qi].nextDate = STAGE_DAYS[newStage] ? addDays(today, STAGE_DAYS[newStage]) : null;
+      db.questions[qi].lastCorrect = today;
+    } else {
+      db.questions[qi].stage = 0;
+      db.questions[qi].nextDate = addDays(today, 1);
+    }
+    db.questions[qi].lastAnswered = today;
+    saveDB(db);
+  }
+
+  if (isCorrect) quizCorrect++; else quizWrong++;
+
+  // color input
+  const inp = document.getElementById('ans-inp');
+  inp.className = 'ans-inp ' + (isCorrect ? 'correct' : 'wrong');
+}
+
+function nextQ() {
+  quizIdx++;
+  showQuizQuestion();
+}
+
+function showResult() {
+  document.getElementById('scr-quiz').classList.remove('on');
+  document.getElementById('scr-result').classList.add('on');
+
+  const total = quizCorrect + quizWrong;
+  const pct = total > 0 ? Math.round(quizCorrect / total * 100) : 0;
+  document.getElementById('res-pct').textContent = pct + '%';
+  document.getElementById('rc-ok').textContent = quizCorrect;
+  document.getElementById('rc-ng').textContent = quizWrong;
+
+  const msg = pct === 100 ? '完璧！素晴らしい！🏆' : pct >= 70 ? 'よくできました！👏' : 'もう少し頑張ろう！💪';
+  document.getElementById('res-msg').textContent = msg;
+  document.getElementById('res-detail').textContent = `${total}問中 ${quizCorrect}問正解`;
+
+  // update streak
+  const db = loadDB();
+  const today = todayStr();
+  if (db.stats.lastDate !== today) {
+    const yesterday = addDays(today, -1);
+    db.stats.streak = db.stats.lastDate === yesterday ? (db.stats.streak || 0) + 1 : 1;
+    db.stats.lastDate = today;
+    saveDB(db);
+  }
+}
+
+// ==========================================
+// ADD PHOTO
+// ==========================================
+const GENRES = ['つるかめ算','割合','比','速さ','仕事算','旅人算','植木算','和差算','分配算','消去算','その他'];
+let selectedGenre = 'その他';
+let selectedImageData = null;
+
+function resetAdd() {
+  document.getElementById('preview-img').style.display = 'none';
+  document.getElementById('preview-img').src = '';
+  document.getElementById('analyze-btn').disabled = true;
+  document.getElementById('ext-q').style.display = 'none';
+  document.getElementById('ext-s').style.display = 'none';
+  document.getElementById('ext-a').style.display = 'none';
+  document.getElementById('save-btn').style.display = 'none';
+  document.getElementById('ext-q-ta').value = '';
+  document.getElementById('ext-s-ta').value = '';
+  document.getElementById('ext-a-ta').value = '';
+  selectedImageData = null;
+  document.getElementById('photo-input').value = '';
+
+  // genre tags
+  const ct = document.getElementById('genre-tags');
+  ct.innerHTML = GENRES.map(g =>
+    `<button class="tag-btn${g===selectedGenre?' on':''}" onclick="selectGenre('${g}',this)">${g}</button>`
+  ).join('');
+
+  if (!getKey()) document.getElementById('api-banner2').style.display = 'block';
+  else document.getElementById('api-banner2').style.display = 'none';
+}
+
+function selectGenre(g, el) {
+  selectedGenre = g;
+  document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function onPhotoSelected(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    selectedImageData = e.target.result;
+    const img = document.getElementById('preview-img');
+    img.src = selectedImageData;
+    img.style.display = 'block';
+    document.getElementById('analyze-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzePhoto() {
+  if (!selectedImageData) return;
+  const key = getKey();
+  if (!key) { showToast('APIキーを設定してください'); return; }
+
+  showLoading('AIが問題を読み取り中…');
+  try {
+    const base64 = selectedImageData.split(',')[1];
+    const mediaType = selectedImageData.split(';')[0].split(':')[1];
+
+    const prompt = `この算数の問題画像を読み取り、以下のJSON形式のみで返してください（マークダウン不要）:
+{
+  "questionText": "問題文をそのまま正確に文字起こし",
+  "answer": "答え（数値のみ、単位なし）",
+  "unit": "単位（円、個、km など。なければ空文字）",
+  "solution": "ステップごとの解き方の説明"
+}`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 1500,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const raw = data.content[0].text.trim().replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+
+    document.getElementById('ext-q-ta').value = parsed.questionText || '';
+    document.getElementById('ext-s-ta').value = parsed.solution || '';
+    document.getElementById('ext-a-ta').value = (parsed.answer || '') + (parsed.unit ? ' ' + parsed.unit : '');
+
+    document.getElementById('ext-q').style.display = 'block';
+    document.getElementById('ext-s').style.display = 'block';
+    document.getElementById('ext-a').style.display = 'block';
+    document.getElementById('save-btn').style.display = 'block';
+    showToast('✅ 読み取り完了！内容を確認してください');
+  } catch(e) {
+    console.error(e);
+    showToast('読み取りに失敗しました。もう一度お試しください。');
+  }
+  hideLoading();
+}
+
+function saveQuestion() {
+  const text = document.getElementById('ext-q-ta').value.trim();
+  const sol = document.getElementById('ext-s-ta').value.trim();
+  const ansRaw = document.getElementById('ext-a-ta').value.trim();
+
+  if (!text) { showToast('問題文を入力してください'); return; }
+
+  // parse answer and unit
+  const ansMatch = ansRaw.match(/^([0-9.\-\/,]+)\s*(.*)$/);
+  const ansVal = ansMatch ? ansMatch[1].replace(/,/g,'') : ansRaw;
+  const ansUnit = ansMatch ? ansMatch[2].trim() : '';
+
+  const db = loadDB();
+  const today = todayStr();
+  const q = {
+    id: Date.now().toString(),
+    genre: selectedGenre,
+    originalText: text,
+    answer: ansVal,
+    unit: ansUnit,
+    solution: sol,
+    imageData: selectedImageData,
+    stage: 0,
+    nextDate: addDays(today, 1), // 翌日から
+    createdAt: today,
+    lastAnswered: null,
+    lastCorrect: null
+  };
+  db.questions.push(q);
+  saveDB(db);
+
+  showToast('✅ 問題を保存しました！');
+  resetAdd();
+  goto('today');
+}
+
+// ==========================================
+// LIST
+// ==========================================
+function refreshList() {
+  const db = loadDB();
+  const ct = document.getElementById('list-content');
+  if (db.questions.length === 0) {
+    ct.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-txt">まだ問題がありません<br>「追加」から写真を撮って登録しましょう</div></div>`;
+    return;
+  }
+
+  const today = todayStr();
+  const sorted = [...db.questions].sort((a,b) => (a.nextDate||'9999') < (b.nextDate||'9999') ? -1 : 1);
+
+  ct.innerHTML = sorted.map(q => {
+    const due = q.nextDate && q.nextDate <= today && q.stage < 4;
+    const nextLabel = q.stage >= 4 ? '習得済み' : q.nextDate ? (q.nextDate <= today ? '今日' : q.nextDate) : '-';
+    return `
+    <div class="q-item">
+      <div>
+        <span class="qi-tag">${q.genre||'算数'}</span>
+        ${due ? '<span style="font-size:10px;color:var(--red);margin-left:4px;font-weight:700;">TODAY</span>' : ''}
+      </div>
+      <div class="qi-body">
+        <div class="qi-text">${q.originalText}</div>
+        <div class="qi-meta">
+          <span class="stage-pill sp-${q.stage}">${STAGE_LABELS[q.stage]}</span>
+          <span>次回: ${nextLabel}</span>
+          <span>答: ${q.answer}${q.unit||''}</span>
+        </div>
+      </div>
+      <button class="qi-del" onclick="deleteQ('${q.id}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteQ(id) {
+  if (!confirm('この問題を削除しますか？')) return;
+  const db = loadDB();
+  db.questions = db.questions.filter(q => q.id !== id);
+  saveDB(db);
+  refreshList();
+}
+
+// ==========================================
+// UTILS
+// ==========================================
+function genreIcon(g) {
+  const m = { 'つるかめ算':'🐢', '割合':'📊', '比':'⚖️', '速さ':'🚂', '仕事算':'🔧', '旅人算':'🚶', '植木算':'🌳', '和差算':'➕', '分配算':'🍰', '消去算':'✂️' };
+  return m[g] || '📐';
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2500);
+}
+
+function showLoading(msg) {
+  document.getElementById('load-txt').textContent = msg || '読み込み中…';
+  document.getElementById('loading').classList.add('on');
+}
+function hideLoading() {
+  document.getElementById('loading').classList.remove('on');
+}
+
+// ==========================================
+// INIT
+// ==========================================
+window.addEventListener('DOMContentLoaded', () => {
+  refreshToday();
+  resetAdd();
+  document.getElementById('hdr-date').textContent = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+  })();
+});
+</script>
+</body>
+</html>
